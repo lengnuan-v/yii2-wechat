@@ -84,4 +84,13 @@ Yii::$app->wechat->sendMassMessage(数组);
 
 // 长链接转成短链接
 Yii::$app->wechat->shortUrl(url);
+
+// js api ticket
+Yii::$app->wechat->jsapi->jsTicket;
+
+// js api signature
+Yii::$app->wechat->jsapi->jsapiSignature(url);
+
+// s api code 获取 openid
+Yii::$app->wechat->getJsapiCodeOpenId(code);
 ```

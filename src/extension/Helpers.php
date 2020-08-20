@@ -46,6 +46,12 @@ class Helpers
     // 短连接
     const WECHAT_SHORT_URL_URL = '/cgi-bin/shorturl';
 
+    // js api ticket
+    const WECHAT_JS_API_TICKET_URL = '/cgi-bin/ticket/getticket';
+
+    // js api code openid
+    const WECHAT_JS_API_CODE_URL = '/sns/oauth2/access_token';
+
     /**
      * http Client
      * @param null $url

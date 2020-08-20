@@ -10,6 +10,7 @@
 namespace lengnuan\wechat;
 
 use Yii;
+use yii\helpers\Json;
 use yii\base\Component;
 use yii\httpclient\Exception;
 use yii\base\InvalidConfigException;
@@ -28,6 +29,9 @@ class WeChat extends Component
 
     // ticket
     public $ticket;
+
+    // js api ticket
+    public $jsTicket;
 
     public function init()
     {
@@ -202,5 +206,60 @@ class WeChat extends Component
     public function shortUrl($longUrl = null)
     {
         return Helpers::httpClient( Helpers::WECHAT_SHORT_URL_URL . "?access_token={$this->accessToken}", 'POST', ['action' => 'long2short', 'long_url' => $longUrl], 'json');
+    }
+
+    /**
+     * js api ticket
+     * @param string $type
+     * @return $this
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function getJsapi($type = 'jsapi')
+    {
+        $results = Helpers::httpClient( Helpers::WECHAT_JS_API_TICKET_URL, 'GET', ['access_token' => $this->accessToken, 'type' => $type]);
+        $this->jsTicket = $results['ticket'];
+        return $this;
+    }
+
+    /**
+     * js api signature
+     * @param null $url
+     * @return string
+     */
+    public function jsapiSignature($url = null)
+    {
+        $timestamp = time();
+        $noncestr  = substr(md5(uniqid(md5(microtime(true)), true)), 8, 16);
+        $signature = sha1("jsapi_ticket={$this->jsTicket}&noncestr={$noncestr}&timestamp={$timestamp}&url={$url}");
+        return Json::encode([
+            'appId' => $this->config['appid'], 'timestamp' => $timestamp, 'nonceStr' => $noncestr, 'signature' => $signature, 'ticket' => $this->jsTicket
+        ]);
+    }
+
+    /**
+     * js api code 获取 openid
+     * @param null $code
+     * @return string
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function getJsapiCodeOpenId($code = null)
+    {
+        $results = Helpers::httpClient( Helpers::WECHAT_JS_API_CODE_URL, 'GET', [
+            'appid' => $this->config['appid'], 'secret' => $this->config['secret'], 'code' => $code, 'grant_type' => 'authorization_code']);
+        return Json::encode($results);
+    }
+
+    /**
+     * 微信服务器请求签名验证
+     * @param array $params
+     * @return bool
+     */
+    private function checkSignature($params = [])
+    {
+        $tmpArr = [$this->config['token'], $params['timestamp'], $params['nonce']];
+        sort($tmpArr, SORT_STRING);
+        return sha1(implode($tmpArr)) == $params['signature'];
     }
 }
