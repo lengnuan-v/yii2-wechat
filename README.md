@@ -46,7 +46,7 @@ params.php 添加：
 ```
 
 
-用法
+用法 https://developers.weixin.qq.com/doc/
 -----
 ```php
 // 获取 access token
@@ -69,4 +69,19 @@ Yii::$app->wechat->getLimitStrTicket(字符串)->ticket;
 
 // 获取二维码图片
 Yii::$app->wechat->getIntTicket(整型)->qrcodeUrl;
+
+// 关注者基本信息
+Yii::$app->wechat->getUserInfo(openid);
+
+// 模板消息
+Yii::$app->wechat->sendTemplateMessage(数组);
+
+// 客服消息
+Yii::$app->wechat->sendCustomMessage(数组);
+
+// 消息群发
+Yii::$app->wechat->sendMassMessage(数组);
+
+// 长链接转成短链接
+Yii::$app->wechat->shortUrl(url);
 ```

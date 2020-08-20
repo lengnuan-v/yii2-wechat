@@ -42,7 +42,7 @@ class WeChat extends Component
      * @throws InvalidConfigException
      * @throws Exception
      */
-    public function getAccessToken()
+    private function getAccessToken()
     {
         $cacheKey = md5("{$this->config['appid']}@access_token");
         $accessToken = $this->cache->get($cacheKey);
@@ -59,8 +59,8 @@ class WeChat extends Component
     /**
      * 获取微信callback IP地址
      * @return mixed|null
-     * @throws InvalidConfigException
      * @throws Exception
+     * @throws InvalidConfigException
      */
     public function getCallbackip()
     {
@@ -79,7 +79,7 @@ class WeChat extends Component
     {
         $api = Helpers::WECHAT_BASE_URL . Helpers::WECHAT_CREATE_QRCODE_URL . '?access_token=' . $this->accessToken;
         $params = ['expire_seconds' => $expire, 'action_name' => 'QR_SCENE', 'action_info' => ['scene' => ['scene_id' => $scene_str]]];
-        $results = Helpers::httpClient( $api, 'POST', $params, [], 'json');
+        $results = Helpers::httpClient( $api, 'POST', $params, 'json');
         $this->ticket = $results['ticket'];
         return $this;
     }
@@ -96,7 +96,7 @@ class WeChat extends Component
     {
         $api = Helpers::WECHAT_BASE_URL . Helpers::WECHAT_CREATE_QRCODE_URL . '?access_token=' . $this->accessToken;
         $params = ['expire_seconds' => $expire, 'action_name' => 'QR_STR_SCENE', 'action_info' => ['scene' => ['scene_str' => $scene_str]]];
-        $results = Helpers::httpClient( $api, 'POST', $params, [], 'json');
+        $results = Helpers::httpClient( $api, 'POST', $params, 'json');
         $this->ticket = $results['ticket'];
         return $this;
     }
@@ -112,7 +112,7 @@ class WeChat extends Component
     {
         $api = Helpers::WECHAT_BASE_URL . Helpers::WECHAT_CREATE_QRCODE_URL . '?access_token=' . $this->accessToken;
         $params = ['action_name' => 'QR_LIMIT_SCENE', 'action_info' => ['scene' => ['scene_id' => $scene_str]]];
-        $results = Helpers::httpClient( $api, 'POST', $params, [], 'json');
+        $results = Helpers::httpClient( $api, 'POST', $params, 'json');
         $this->ticket = $results['ticket'];
         return $this;
     }
@@ -128,10 +128,11 @@ class WeChat extends Component
     {
         $api = Helpers::WECHAT_BASE_URL . Helpers::WECHAT_CREATE_QRCODE_URL . '?access_token=' . $this->accessToken;
         $params = ['action_name' => 'QR_LIMIT_STR_SCENE', 'action_info' => ['scene' => ['scene_str' => $scene_str]]];
-        $results = Helpers::httpClient( $api, 'POST', $params, [], 'json');
+        $results = Helpers::httpClient( $api, 'POST', $params, 'json');
         $this->ticket = $results['ticket'];
         return $this;
     }
+
     /**
      * 获取二维码图片
      * @return string
@@ -139,5 +140,67 @@ class WeChat extends Component
     public function getQrcodeUrl()
     {
         return Helpers::WECHAT_SHOW_QRCODE_URL . '?ticket=' . urlencode($this->ticket);
+    }
+
+    /**
+     * 关注者基本信息
+     * @param null $openId
+     * @return mixed|null
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function getUserInfo($openId = null)
+    {
+        return Helpers::httpClient( Helpers::WECHAT_MEMBER_INFO_URL, 'GET', [
+            'access_token' => $this->accessToken, 'openid' => $openId, 'lang' => 'zh_CN'
+        ]);
+    }
+
+    /**
+     * 模板消息
+     * @param array $data
+     * @return mixed|null
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function sendTemplateMessage($data = [])
+    {
+        return Helpers::httpClient( Helpers::WECHAT_TEMPLATE_MESSAGE_SEND_URL . "?access_token={$this->accessToken}", 'POST', $data, 'json');
+    }
+
+    /**
+     * 客服消息
+     * @param array $data
+     * @return mixed|null
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function sendCustomMessage($data = [])
+    {
+        return Helpers::httpClient( Helpers::WECHAT_CUSTOM_MESSAGE_SEND_URL . "?access_token={$this->accessToken}", 'POST', $data, 'json');
+    }
+
+    /**
+     * 消息群发
+     * @param array $data
+     * @return mixed|null
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function sendMassMessage($data = [])
+    {
+        return Helpers::httpClient( Helpers::WECHAT_MASS_SEND_URL . "?access_token={$this->accessToken}", 'POST', $data, 'json');
+    }
+
+    /**
+     * 长链接转成短链接
+     * @param null $longUrl
+     * @return mixed|null
+     * @throws Exception
+     * @throws InvalidConfigException
+     */
+    public function shortUrl($longUrl = null)
+    {
+        return Helpers::httpClient( Helpers::WECHAT_SHORT_URL_URL . "?access_token={$this->accessToken}", 'POST', ['action' => 'long2short', 'long_url' => $longUrl], 'json');
     }
 }

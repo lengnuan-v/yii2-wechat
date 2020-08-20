@@ -31,6 +31,21 @@ class Helpers
     // 二维码展示
     const WECHAT_SHOW_QRCODE_URL = 'https://mp.weixin.qq.com/cgi-bin/showqrcode';
 
+    // 关注者基本信息
+    const WECHAT_MEMBER_INFO_URL = '/cgi-bin/user/info';
+
+    // 模板消息
+    const WECHAT_TEMPLATE_MESSAGE_SEND_URL = '/cgi-bin/message/template/send';
+
+    // 客服消息
+    const WECHAT_CUSTOM_MESSAGE_SEND_URL = '/cgi-bin/message/custom/send';
+
+    // 消息群发
+    const WECHAT_MASS_SEND_URL = '/cgi-bin/message/mass/sendall';
+
+    // 短连接
+    const WECHAT_SHORT_URL_URL = '/cgi-bin/shorturl';
+
     /**
      * http Client
      * @param null $url
@@ -42,7 +57,7 @@ class Helpers
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public static function httpClient($url = null, $method = 'GET', $data = [], $headers = [], $format = 'curl')
+    public static function httpClient($url = null, $method = 'GET', $data = [], $format = 'curl', $headers = [])
     {
         if (stripos($url, 'http://') === false && stripos($url, 'https://') === false) {
             $url = self::WECHAT_BASE_URL . $url;
@@ -53,7 +68,7 @@ class Helpers
             ->setFormat($format)->setOptions([CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 10])->send();
         $results = Json::decode($response->content);
         if (isset($results['errcode']) && $results['errcode'] !== 0) {
-            throw new Exception($response->content);
+            throw new Exception("{$url}\n\n{$response->content}");
         }
         return $results;
     }
