@@ -49,7 +49,7 @@ params.php 添加：
 用法
 -----
 ```php
-// 获取access_token
+// 获取 access token
 Yii::$app->wechat->accessToken;
 
 // 获取微信callback IP地址
