@@ -68,5 +68,5 @@ Yii::$app->wechat->getLimitIntTicket(整型)->ticket;
 Yii::$app->wechat->getLimitStrTicket(字符串)->ticket;
 
 // 获取二维码图片
-Yii::$app->wechat->getSceneTicket(整型)->qrcodeUrl;
+Yii::$app->wechat->getIntTicket(整型)->qrcodeUrl;
 ```
