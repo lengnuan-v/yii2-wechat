@@ -15,6 +15,7 @@ use yii\base\Component;
 use yii\httpclient\Exception;
 use yii\base\InvalidConfigException;
 use lengnuan\wechat\extension\Helpers;
+use lengnuan\wechat\encryption\WXBizMsgCrypt;
 
 class WeChat extends Component
 {
@@ -33,11 +34,15 @@ class WeChat extends Component
     // js api ticket
     public $jsTicket;
 
+    // encryption
+    public $encryption;
+
     public function init()
     {
         $this->cache = Yii::$app->cache;
         $this->config = Yii::$app->params['weChat']['config'];
         $this->accessToken = $this->getAccessToken();
+        $this->encryption = new WXBizMsgCrypt($this->config['token'], $this->config['aeskey'], $this->config['appid']);
     }
 
     /**
@@ -258,8 +263,62 @@ class WeChat extends Component
      */
     private function checkSignature($params = [])
     {
-        $tmpArr = [$this->config['token'], $params['timestamp'], $params['nonce']];
-        sort($tmpArr, SORT_STRING);
-        return sha1(implode($tmpArr)) == $params['signature'];
+        $signature = [$this->config['token'], $params['timestamp'], $params['nonce']];
+        sort($signature, SORT_STRING);
+        return sha1(implode($signature)) === $params['signature'];
+    }
+
+    // 处理微信服务器回调
+    public function handleMessage($params = [])
+    {
+        if ($this->checkSignature($params) === true) {
+            if (empty($params['echostr']) === false) {
+                return $params['echostr'];
+            }
+            if (empty($params['openid']) === false) {
+                return $this->parseMessageBody($params);
+            }
+        }
+        return ['errcode' => -1, 'errmsg' => '未授权'];
+    }
+
+    /**
+     * 解析微信服务器请求的xml数据
+     * @param array $params
+     * @return array|string
+     */
+    public function parseMessageBody($params = [])
+    {
+        $errCode = 0;
+        $postStr = file_get_contents('php://input');
+        if (!empty($postStr)){
+            // 解密
+            if ($params['encrypt_type'] === 'aes') {
+                $decryptMsg = '';
+                $errCode = $this->encryption->decryptMsg($params["msg_signature"], $params["timestamp"], $params["nonce"], $postStr, $decryptMsg);
+                $postStr = $decryptMsg;
+            }
+            $data = [];
+            if ($errCode === 0) {
+                $xml = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
+                $data = Json::decode(Json::encode($xml));
+            }
+            return ['errcode' => $errCode, 'data' => $data];
+        }
+        return ['errcode' => -1, 'errmsg' => '未知错误'];
+    }
+
+    /**
+     * 消息加密
+     * @param null $text
+     * @param null $time
+     * @param null $nonce
+     * @return string
+     */
+    public function messageEncrypt($text = null, $time = null, $nonce = null)
+    {
+        $encryptMsg = '';
+        $this->encryption->encryptMsg($text, $time, $nonce, $encryptMsg);
+        return $encryptMsg;
     }
 }
