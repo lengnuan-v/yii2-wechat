@@ -253,6 +253,7 @@ class WeChat extends Component
     {
         $results = Helpers::httpClient( Helpers::WECHAT_JS_API_CODE_URL, 'GET', [
             'appid' => $this->config['appid'], 'secret' => $this->config['secret'], 'code' => $code, 'grant_type' => 'authorization_code']);
+        $results['user'] = $this->getUserInfo($results['openid']);
         return Json::encode($results);
     }
 
