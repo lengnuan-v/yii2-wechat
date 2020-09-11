@@ -53,13 +53,13 @@ class WeChat extends Component
      */
     private function getAccessToken()
     {
-        $cacheKey = md5("{$this->config['appid']}@access_token");
+        $cacheKey = 'gowechat_officialaccount__access_token_' . $this->config['appid'];
         $accessToken = $this->cache->get($cacheKey);
         if (!$accessToken) {
             $results = Helpers::httpClient(Helpers::WECHAT_ACCESS_TOKEN_URL, 'GET', [
                 'grant_type' => 'client_credential', 'appid' => $this->config['appid'], 'secret' => $this->config['secret']
             ]);
-            $this->cache->set($cacheKey, $results['access_token'], $results['expires_in'] - 600);
+            $this->cache->set($cacheKey, $results['access_token'], $results['expires_in'] - 1500);
             $accessToken = $results['access_token'];
         }
         return $accessToken;
